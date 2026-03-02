@@ -1,10 +1,12 @@
-
 /**
- * LocalDB - Motor de persistencia basado en IndexedDB
+ * LocalDB — Motor de persistencia basado en IndexedDB
  */
 
 const DB_NAME = 'ReparaPro_LocalDB';
-const DB_VERSION = 4; // Incrementado tras eliminar invoices
+const DB_VERSION = 5;
+
+const STORES = ['repairs', 'budgets', 'settings'] as const;
+export type StoreName = (typeof STORES)[number];
 
 export class LocalDB {
   private db: IDBDatabase | null = null;
@@ -13,70 +15,65 @@ export class LocalDB {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains('repairs')) {
-          db.createObjectStore('repairs', { keyPath: 'id' });
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        for (const name of STORES) {
+          if (!db.objectStoreNames.contains(name)) {
+            db.createObjectStore(name, { keyPath: 'id' });
+          }
         }
-        if (!db.objectStoreNames.contains('budgets')) {
-          db.createObjectStore('budgets', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('settings')) {
-          db.createObjectStore('settings', { keyPath: 'id' });
-        }
-        // Eliminado invoices de aquí
       };
 
-      request.onsuccess = (event: any) => {
-        this.db = event.target.result;
+      request.onsuccess = (event) => {
+        this.db = (event.target as IDBOpenDBRequest).result;
         resolve();
       };
 
-      request.onerror = (event: any) => {
-        reject("Error abriendo IndexedDB");
+      request.onerror = () => {
+        reject(new Error('Error abriendo IndexedDB'));
       };
     });
   }
 
-  async getAll(storeName: string): Promise<any[]> {
+  async getAll<T extends { id: string }>(storeName: StoreName): Promise<T[]> {
     return new Promise((resolve) => {
       if (!this.db) return resolve([]);
       try {
-        const transaction = this.db.transaction(storeName, 'readonly');
-        const store = transaction.objectStore(storeName);
+        const tx = this.db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
         const request = store.getAll();
-        request.onsuccess = () => resolve(request.result);
+        request.onsuccess = () => resolve(request.result as T[]);
         request.onerror = () => resolve([]);
-      } catch (e) {
+      } catch {
         resolve([]);
       }
     });
   }
 
-  async put(storeName: string, data: any): Promise<void> {
+  async put<T extends { id: string }>(storeName: StoreName, data: T): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject("DB no inicializada");
+      if (!this.db) return reject(new Error('DB no inicializada'));
       try {
-        const transaction = this.db.transaction(storeName, 'readwrite');
-        const store = transaction.objectStore(storeName);
+        const tx = this.db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
         store.put(data);
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = (e) => reject(e);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(new Error(`Error escribiendo en ${storeName}`));
       } catch (e) {
         reject(e);
       }
     });
   }
 
-  async delete(storeName: string, id: string): Promise<void> {
+  async delete(storeName: StoreName, id: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject("DB no inicializada");
+      if (!this.db) return reject(new Error('DB no inicializada'));
       try {
-        const transaction = this.db.transaction(storeName, 'readwrite');
-        const store = transaction.objectStore(storeName);
+        const tx = this.db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
         store.delete(id);
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = (e) => reject(e);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(new Error(`Error eliminando de ${storeName}`));
       } catch (e) {
         reject(e);
       }

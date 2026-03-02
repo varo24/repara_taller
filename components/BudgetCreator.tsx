@@ -11,11 +11,10 @@ import {
   CheckCircle2,
   PenTool,
   Save,
-  Building2,
-  AlertCircle
 } from 'lucide-react';
 import { RepairItem, BudgetItem, LaborItem, Budget, AppSettings } from '../types';
 import SignaturePad from './SignaturePad';
+import { generateId } from '../utils/generateId';
 
 interface BudgetCreatorProps {
   repair: RepairItem;
@@ -36,12 +35,12 @@ const BudgetCreator: React.FC<BudgetCreatorProps> = ({ repair, settings, initial
   const formatRMA = (num: number) => `RMA-${num.toString().padStart(5, '0')}`;
 
   const addPiece = () => {
-    const newItem: BudgetItem = { id: crypto.randomUUID(), repairId: repair.id, description: '', quantity: 1, unitPrice: 0 };
+    const newItem: BudgetItem = { id: generateId(), repairId: repair.id, description: '', quantity: 1, unitPrice: 0 };
     setItems([...items, newItem]);
   };
 
   const addLabor = () => {
-    const newItem: LaborItem = { id: crypto.randomUUID(), description: 'Intervención técnica básica', hours: 1, hourlyRate: settings.hourlyRate || 45 };
+    const newItem: LaborItem = { id: generateId(), description: 'Intervención técnica básica', hours: 1, hourlyRate: settings.hourlyRate || 45 };
     setLaborItems([...laborItems, newItem]);
   };
 
@@ -59,7 +58,7 @@ const BudgetCreator: React.FC<BudgetCreatorProps> = ({ repair, settings, initial
   const handleSave = () => {
     setIsSaving(true);
     const budget: Budget = {
-      id: initialBudget?.id || crypto.randomUUID(),
+      id: initialBudget?.id || generateId(),
       repairId: repair.id,
       rmaNumber: repair.rmaNumber,
       items,
@@ -177,7 +176,7 @@ const BudgetCreator: React.FC<BudgetCreatorProps> = ({ repair, settings, initial
                <p className="text-[10px] font-bold text-blue-600 uppercase mt-1">Digitalice la aceptación del cliente</p>
              </div>
              <div className="bg-slate-50 p-2 rounded-2xl border border-slate-200">
-               <SignaturePad onSave={setSignature} initialValue={signature} height="h-80" />
+               <SignaturePad onSave={setSignature} initialValue={signature} height="h-64" />
              </div>
              <button onClick={() => setActiveTab('resumen')} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all">
                 <CheckCircle2 size={16} /> Validar Datos

@@ -1,3 +1,4 @@
+
 export enum RepairStatus {
   PENDING = 'Pendiente',
   DIAGNOSING = 'En Diagnóstico',
@@ -8,9 +9,10 @@ export enum RepairStatus {
   IN_PROGRESS = 'En Reparación',
   READY = 'Listo para Entrega',
   DELIVERED = 'Entregado',
-  CANCELLED = 'Cancelado',
+  CANCELLED = 'Cancelado'
 }
 
+// Added rmaPrefix and customerSignature to match usage in components
 export interface RepairItem {
   id: string;
   rmaNumber: number;
@@ -61,6 +63,20 @@ export interface Budget {
   status?: 'pending' | 'accepted' | 'rejected';
 }
 
+// Fixed missing Invoice interface reported as error in InvoiceList.tsx
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerPhone: string;
+  date: string;
+  items: BudgetItem[];
+  laborItems: LaborItem[];
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+}
+
 export interface AppSettings {
   appName: string;
   address: string;
@@ -80,13 +96,4 @@ export interface AppNotification {
   message: string;
 }
 
-export type ViewType =
-  | 'dashboard'
-  | 'repairs'
-  | 'new-repair'
-  | 'budgets'
-  | 'customers'
-  | 'settings'
-  | 'stats'
-  | 'print-label'
-  | 'print-reception';
+export type ViewType = 'dashboard' | 'repairs' | 'new-repair' | 'budgets' | 'customers' | 'settings' | 'stats';

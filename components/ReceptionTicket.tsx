@@ -1,6 +1,5 @@
 import React from 'react';
 import { RepairItem, AppSettings } from '../types';
-import { APP_VERSION } from '../constants';
 import { 
   User, Smartphone, MapPin, Phone, 
   Calendar, Clock, ClipboardCheck, 
@@ -175,7 +174,7 @@ const ReceptionTicket: React.FC<ReceptionTicketProps> = ({ repair, settings }) =
            </div>
            <div>
              <p className="text-[11px] font-black uppercase text-slate-950 leading-none">Copia Oficial para el Cliente</p>
-             <p className="text-[8px] font-bold text-slate-400 uppercase mt-1.5 tracking-widest">Sistema ReparaPro Master Terminal v{APP_VERSION} • {new Date().getFullYear()}</p>
+             <p className="text-[8px] font-bold text-slate-400 uppercase mt-1.5 tracking-widest">Sistema ReparaPro Master Terminal v5.4.4 • {new Date().getFullYear()}</p>
            </div>
         </div>
         <div className="text-right">

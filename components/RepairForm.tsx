@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import {
-  X, User, Smartphone,
-  BrainCircuit, Loader2, Save
+import { 
+  X, Camera, Trash2, User, Smartphone, 
+  BrainCircuit, Sparkles, Loader2, Save
 } from 'lucide-react';
 import { RepairItem, RepairStatus, AppSettings } from '../types';
 import { getSmartDiagnosis } from '../services/geminiService';

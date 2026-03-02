@@ -2,8 +2,8 @@
 // ReparaPro Master - Supabase Service v4
 // ============================================================
 
-const BASE = import.meta.env.VITE_SUPABASE_URL || 'https://bglmkckpopcuxmafting.supabase.co/rest/v1';
-const KEY  = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbG1rY2twb3BjdXhtYWZ0aW5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg0MzYsImV4cCI6MjA4NzE4NDQzNn0.g88wW7562dUhmzpNNPRxqxpMdykTv8A1YXBkSVNI4dA';
+const BASE = 'https://bglmkckpopcuxmafting.supabase.co/rest/v1';
+const KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbG1rY2twb3BjdXhtYWZ0aW5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg0MzYsImV4cCI6MjA4NzE4NDQzNn0.g88wW7562dUhmzpNNPRxqxpMdykTv8A1YXBkSVNI4dA';
 
 const H = {
   'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ const call = async (path: string, opts: RequestInit = {}, timeoutMs = 5000): Pro
 export const supabase = {
   async test(): Promise<boolean> {
     try {
-      const res = await call('repairs?limit=1&select=id', {}, 4000);
+      const res = await call('reparaciones_publicas?limit=1&select=id', {}, 4000);
       return res.status < 500;
     } catch { return false; }
   },
@@ -39,17 +39,7 @@ export const supabase = {
       const res = await call(`${table}?select=*&order=updated_at.desc`);
       if (!res.ok) return [];
       const rows: any[] = await res.json();
-      
-      const seen = new Set();
-      const uniqueRows = [];
-      for (const r of rows) {
-        if (!seen.has(r.business_id)) {
-          seen.add(r.business_id);
-          uniqueRows.push(r);
-        }
-      }
-
-      return uniqueRows.map(r => {
+      return rows.map(r => {
         const d = r.data && typeof r.data === 'object' ? r.data : {};
         return { ...d, _rowId: r.id };
       });
@@ -59,41 +49,20 @@ export const supabase = {
   async save(table: string, record: any): Promise<boolean> {
     try {
       const { _rowId, ...clean } = record;
-      
-      // Intentar actualizar primero (PATCH)
-      const patchRes = await call(`${table}?business_id=eq.${encodeURIComponent(clean.id)}`, {
-        method: 'PATCH',
-        headers: { 'Prefer': 'return=representation' },
+      const res = await call(table, {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({
+          business_id: clean.id,
           data: clean,
           updated_at: new Date().toISOString(),
         }),
       });
-
-      let updatedRows = [];
-      if (patchRes.ok) {
-        updatedRows = await patchRes.json().catch(() => []);
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        console.warn(`[Supabase] save ${table} ${res.status}:`, txt);
       }
-
-      // Si no se actualizó ninguna fila, hacer POST (Insert)
-      if (updatedRows.length === 0) {
-        const postRes = await call(table, {
-          method: 'POST',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            business_id: clean.id,
-            data: clean,
-            updated_at: new Date().toISOString(),
-          }),
-        });
-        if (!postRes.ok) {
-          const txt = await postRes.text().catch(() => '');
-          console.warn(`[Supabase] save POST ${table} ${postRes.status}:`, txt);
-        }
-        return postRes.ok;
-      }
-
-      return true;
+      return res.ok;
     } catch (e) {
       console.warn('[Supabase] save error:', e);
       return false;

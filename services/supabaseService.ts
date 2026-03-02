@@ -29,7 +29,7 @@ const call = async (path: string, opts: RequestInit = {}, timeoutMs = 5000): Pro
 export const supabase = {
   async test(): Promise<boolean> {
     try {
-      const res = await call('repairs?limit=1&select=id', {}, 4000);
+      const res = await call('reparaciones_publicas?limit=1&select=id', {}, 4000);
       return res.status < 500;
     } catch { return false; }
   },

@@ -1,0 +1,32 @@
+{
+  "name": "ReparaPro Master Console",
+  "short_name": "ReparaPro",
+  "description": "Consola de Gestión Técnica Local para Talleres de Electrodomésticos.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3062/3062331.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3062/3062331.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1000",
+      "sizes": "1000x600",
+      "type": "image/jpg",
+      "form_factor": "wide"
+    }
+  ],
+  "requestFramePermissions": []
+}

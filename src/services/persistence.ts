@@ -14,14 +14,7 @@ const timers: Record<string, ReturnType<typeof setInterval>> = {};
 const prevHash: Record<string, string> = {};
 let online = false;
 
-const tableFor = (col: string) => {
-  switch (col) {
-    case 'repairs': return 'reparaciones_publicas';
-    case 'budgets': return 'presupuestos_publicos';
-    case 'settings': return 'configuracion_publica_rp';
-    default: return col;
-  }
-};
+const tableFor = (col: string) => col === 'settings' ? 'rp_settings' : col;
 const hashOf = (arr: any[]) => arr.map(d => `${d.id}|${d.updatedAt||''}`).sort().join(',');
 const broadcast = (col: string, data: any[]) => subs[col]?.forEach(cb => cb(data));
 

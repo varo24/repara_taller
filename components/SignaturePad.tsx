@@ -27,7 +27,7 @@ const UGEE_S640 = {
   REPORT_RATE: 220,
 };
 
-const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, initialValue, height = "h-80" }) => {
+const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, initialValue, height = "h-96" }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -223,9 +223,11 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, initialValue, heigh
         ref={containerRef}
         className={`relative ${height} w-full bg-white border-2 border-slate-200 rounded-[1.5rem] overflow-hidden cursor-crosshair shadow-inner`}
         style={{
+          minHeight: '450px',
+          maxHeight: '85vh',
           aspectRatio: `${UGEE_S640.ASPECT_RATIO}`,
-          minHeight: '280px',
-          maxHeight: '500px',
+          margin: '0 auto',
+          maxWidth: '100%',
         }}
       >
         <canvas

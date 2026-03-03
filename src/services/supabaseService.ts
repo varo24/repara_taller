@@ -78,4 +78,42 @@ export const supabase = {
       return res.ok;
     } catch { return false; }
   },
+
+  // ============================================================
+  // BACKUP — Guarda snapshot completo en tabla 'backups'
+  // ============================================================
+  async saveBackup(backupData: any): Promise<boolean> {
+    try {
+      const backupId = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+      const res = await call('backups', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({
+          backup_id: backupId,
+          data: backupData,
+          created_at: new Date().toISOString(),
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        console.warn(`[Supabase] saveBackup ${res.status}:`, txt);
+      }
+      return res.ok;
+    } catch (e) {
+      console.warn('[Supabase] saveBackup error:', e);
+      return false;
+    }
+  },
+
+  async getLatestBackup(): Promise<any | null> {
+    try {
+      const res = await call('backups?select=*&order=created_at.desc&limit=1');
+      if (!res.ok) return null;
+      const rows: any[] = await res.json();
+      if (rows.length === 0) return null;
+      return rows[0].data || null;
+    } catch {
+      return null;
+    }
+  },
 };

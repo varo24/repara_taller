@@ -2,10 +2,11 @@ import React, { useState, useRef } from 'react';
 import { 
   Save, Building2, Download, Upload, Globe, Copy, CheckCircle2, 
   Monitor, Camera, Mail, Phone, MapPin, FileText, Trash2, Image as ImageIcon,
-  ShieldCheck, AlertTriangle, Database, RefreshCw
+  ShieldCheck, AlertTriangle, Database, RefreshCw, Cloud, CloudDownload
 } from 'lucide-react';
 import { AppSettings } from '../types';
 import { storage } from '../services/persistence';
+import { supabase } from '../services/supabaseService';
 
 interface SettingsFormProps {
   settings: AppSettings;
@@ -23,6 +24,8 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ settings, canInstall, onIns
   const importInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ok: boolean, msg: string} | null>(null);
+  const [cloudBusy, setCloudBusy] = useState(false);
+  const [cloudResult, setCloudResult] = useState<{ok: boolean, msg: string} | null>(null);
 
   const currentUrl = window.location.href;
 
@@ -264,6 +267,90 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ settings, canInstall, onIns
             }`}>
               {importResult.ok ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
               {importResult.msg}
+            </div>
+          )}
+        </div>
+
+        {/* Backup en la nube (Supabase) */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Backup automático en la nube (Supabase)</p>
+          <p className="text-[9px] text-slate-600 -mt-1">Se crea automáticamente al cerrar la app. También puedes hacerlo manualmente.</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              disabled={cloudBusy}
+              onClick={async () => {
+                setCloudBusy(true);
+                setCloudResult(null);
+                try {
+                  const ok = await storage.forceBackup();
+                  setCloudResult(ok
+                    ? { ok: true, msg: 'Backup guardado en Supabase correctamente' }
+                    : { ok: false, msg: 'No se pudo guardar. ¿Está Supabase conectado?' }
+                  );
+                } catch {
+                  setCloudResult({ ok: false, msg: 'Error al crear backup en la nube' });
+                } finally {
+                  setCloudBusy(false);
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all disabled:opacity-50"
+            >
+              {cloudBusy ? <RefreshCw size={16} className="animate-spin" /> : <Cloud size={16} />}
+              {cloudBusy ? 'Guardando...' : 'Backup nube ahora'}
+            </button>
+            <button
+              type="button"
+              disabled={cloudBusy}
+              onClick={async () => {
+                setCloudBusy(true);
+                setCloudResult(null);
+                try {
+                  const backup = await supabase.getLatestBackup();
+                  if (!backup) {
+                    setCloudResult({ ok: false, msg: 'No hay backups en la nube' });
+                    return;
+                  }
+                  let count = 0;
+                  if (backup.repairs) {
+                    for (const r of backup.repairs) {
+                      await storage.save('repairs', r.id, r);
+                      count++;
+                    }
+                  }
+                  if (backup.budgets) {
+                    for (const b of backup.budgets) {
+                      await storage.save('budgets', b.id, b);
+                      count++;
+                    }
+                  }
+                  if (backup.settings) {
+                    const s = Array.isArray(backup.settings) ? backup.settings[0] : backup.settings;
+                    if (s?.id) await storage.save('settings', s.id, s);
+                  }
+                  const fecha = backup.backupDate ? new Date(backup.backupDate).toLocaleString('es-ES') : 'desconocida';
+                  setCloudResult({ ok: true, msg: `${count} registros restaurados del backup (${fecha})` });
+                } catch {
+                  setCloudResult({ ok: false, msg: 'Error al restaurar desde la nube' });
+                } finally {
+                  setCloudBusy(false);
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all disabled:opacity-50"
+            >
+              {cloudBusy ? <RefreshCw size={16} className="animate-spin" /> : <CloudDownload size={16} />}
+              {cloudBusy ? 'Restaurando...' : 'Restaurar último backup'}
+            </button>
+          </div>
+
+          {cloudResult && (
+            <div className={`flex items-center gap-3 px-5 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest ${
+              cloudResult.ok
+                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/20'
+                : 'bg-red-900/30 text-red-400 border border-red-500/20'
+            }`}>
+              {cloudResult.ok ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+              {cloudResult.msg}
             </div>
           )}
         </div>
